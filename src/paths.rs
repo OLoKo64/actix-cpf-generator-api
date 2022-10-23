@@ -19,27 +19,43 @@ pub struct Info {
 }
 
 #[derive(Debug, Serialize)]
+pub struct ValidCpfResponse {
+    cpf: Vec<lib::Cpf>,
+    message: String,
+    quantity: u32,
+}
+
+#[derive(Debug, Serialize)]
 struct ValidateResponse {
     is_valid: bool,
     error: Option<String>,
 }
 
-#[get("/new-cpf")]
+#[get("/gen-cpf")]
 pub async fn new_cpf(qtd: web::Query<Info>) -> impl Responder {
-    let qtd = qtd
+    let mut qtd = qtd
         .qtd
         .clone()
         .unwrap_or_else(|| "1".to_string())
         .parse::<u32>()
         .unwrap_or(1);
+    if qtd > 1000 {
+        qtd = 1000;
+    }
     let mut cpfs = Vec::new();
     for _ in 0..qtd {
         cpfs.push(lib::generate_cpf(None, None));
     }
-    web::Json(cpfs)
+    web::Json({
+        ValidCpfResponse {
+            cpf: cpfs,
+            message: format!("{} CPFs generated.", qtd),
+            quantity: qtd,
+        }
+    })
 }
 
-#[get("/new-cpf/{state_code}")]
+#[get("/gen-cpf/{state_code}")]
 pub async fn new_cpf_state_code(
     qtd: web::Query<Info>,
     state_code: web::Path<String>,
@@ -59,17 +75,26 @@ pub async fn new_cpf_state_code(
             })
         }
     };
-    let qtd = qtd
+    let mut qtd = qtd
         .qtd
         .clone()
         .unwrap_or_else(|| "1".to_string())
         .parse::<u32>()
         .unwrap_or(1);
+    if qtd > 1000 {
+        qtd = 1000;
+    }
     let mut cpfs = Vec::new();
     for _ in 0..qtd {
         cpfs.push(lib::generate_cpf(Some(state_code_parsed), None));
     }
-    Ok(web::Json(cpfs))
+    Ok(web::Json({
+        ValidCpfResponse {
+            cpf: cpfs,
+            message: format!("Generated {} CPFs with state code {}", qtd, state_code_parsed),
+            quantity: qtd,
+        }
+    }))
 }
 
 #[get("/validate-cpf/{cpf}")]
