@@ -1,6 +1,7 @@
 use actix_web::{web, App, HttpServer};
-mod lib;
 mod paths;
+mod types;
+mod utils;
 
 const PORT: u16 = 8080;
 

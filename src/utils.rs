@@ -1,14 +1,8 @@
 use rand::Rng;
-use serde::Serialize;
 use std::error::Error;
 use unicode_segmentation::UnicodeSegmentation;
 
-#[derive(Debug, Serialize)]
-pub struct Cpf {
-    pub cpf: String,
-    pub cpf_formatted: String,
-    pub cpf_state: Vec<String>,
-}
+use crate::types::Cpf;
 
 pub fn validate_cpf(cpf: &str) -> Result<String, Box<dyn Error>> {
     let cpf = cpf.replace('.', "").replace('-', "");

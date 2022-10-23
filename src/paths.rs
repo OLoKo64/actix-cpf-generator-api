@@ -1,40 +1,9 @@
-use actix_web::{error, get, web, Responder};
-use derive_more::{Display, Error};
-use serde::{Deserialize, Serialize};
+use actix_web::{get, web, Responder};
 
-use crate::lib;
-
-#[derive(Debug, Display, Error)]
-#[display(fmt = "error: {}", message)]
-pub struct ResponseErrorCustom {
-    message: &'static str,
-}
-
-// Use default implementation for `error_response()` method
-impl error::ResponseError for ResponseErrorCustom {}
-
-#[derive(Deserialize)]
-pub struct QuantityCpf {
-    qtd: Option<String>,
-}
-
-#[derive(Deserialize)]
-pub struct ValidateCpf {
-    cpf: Option<String>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct ValidCpfResponse {
-    cpf: Vec<lib::Cpf>,
-    message: String,
-    quantity: u32,
-}
-
-#[derive(Debug, Serialize)]
-struct ValidateResponse {
-    is_valid: bool,
-    error: Option<String>,
-}
+use crate::types::{
+    QuantityCpf, ResponseErrorCustom, ValidCpfResponse, ValidateCpf, ValidateResponse,
+};
+use crate::utils;
 
 #[get("/gen-cpf")]
 pub async fn new_cpf(qtd: web::Query<QuantityCpf>) -> impl Responder {
@@ -49,7 +18,7 @@ pub async fn new_cpf(qtd: web::Query<QuantityCpf>) -> impl Responder {
     }
     let mut cpfs = Vec::new();
     for _ in 0..qtd {
-        cpfs.push(lib::generate_cpf(None, None));
+        cpfs.push(utils::generate_cpf(None, None));
     }
     web::Json({
         ValidCpfResponse {
@@ -91,7 +60,7 @@ pub async fn new_cpf_state_code(
     }
     let mut cpfs = Vec::new();
     for _ in 0..qtd {
-        cpfs.push(lib::generate_cpf(Some(state_code_parsed), None));
+        cpfs.push(utils::generate_cpf(Some(state_code_parsed), None));
     }
     Ok(web::Json({
         ValidCpfResponse {
@@ -111,7 +80,7 @@ pub async fn validate_cpf(query: web::Query<ValidateCpf>) -> impl Responder {
         Some(cpf) => cpf,
         None => return web::Json(ValidateResponse { is_valid: false, error: Some("CPF not provided. Inform the cpf in the query params: '/validate-cpf?cpf=123456789012'".to_string()) }),
     };
-    let is_valid = lib::validate_cpf(&cpf);
+    let is_valid = utils::validate_cpf(&cpf);
     if let Err(error_message) = is_valid {
         web::Json(ValidateResponse {
             is_valid: false,
