@@ -1,6 +1,7 @@
 use rand::Rng;
 use serde::Serialize;
 use std::error::Error;
+use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Debug, Serialize)]
 pub struct Cpf {
@@ -11,11 +12,12 @@ pub struct Cpf {
 
 pub fn validate_cpf(cpf: &str) -> Result<String, Box<dyn Error>> {
     let cpf = cpf.replace('.', "").replace('-', "");
-    if cpf.len() < 11 {
-        return Err("Invalid CPF. Must have 11 digits.".into());
+    let cpf_len = cpf.graphemes(true).count();
+    if cpf_len < 11 || cpf_len > 11 {
+        return Err(format!("Invalid CPF. Must have 11 digits. It has {}", cpf_len).into());
     }
     // This line guarantees that the vector will have 9 elements
-    let binding = cpf.chars().collect::<Vec<_>>()[..9].to_vec();
+    let binding = cpf.graphemes(true).collect::<Vec<_>>()[..9].to_vec();
     let clear_cpf = binding.iter().map(|x| x.to_string().parse::<u8>());
     let mut cpf_seed = Vec::new();
     for x in clear_cpf {

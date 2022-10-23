@@ -6,16 +6,21 @@ use crate::lib;
 
 #[derive(Debug, Display, Error)]
 #[display(fmt = "error: {}", message)]
-pub struct ResponseError {
+pub struct ResponseErrorCustom {
     message: &'static str,
 }
 
 // Use default implementation for `error_response()` method
-impl error::ResponseError for ResponseError {}
+impl error::ResponseError for ResponseErrorCustom {}
 
 #[derive(Deserialize)]
-pub struct Info {
+pub struct QuantityCpf {
     qtd: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct ValidateCpf {
+    cpf: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -32,7 +37,7 @@ struct ValidateResponse {
 }
 
 #[get("/gen-cpf")]
-pub async fn new_cpf(qtd: web::Query<Info>) -> impl Responder {
+pub async fn new_cpf(qtd: web::Query<QuantityCpf>) -> impl Responder {
     let mut qtd = qtd
         .qtd
         .clone()
@@ -57,20 +62,20 @@ pub async fn new_cpf(qtd: web::Query<Info>) -> impl Responder {
 
 #[get("/gen-cpf/{state_code}")]
 pub async fn new_cpf_state_code(
-    qtd: web::Query<Info>,
+    qtd: web::Query<QuantityCpf>,
     state_code: web::Path<String>,
-) -> Result<impl Responder, ResponseError> {
+) -> Result<impl Responder, ResponseErrorCustom> {
     let state_code_parsed: u8 = match state_code.parse::<u8>() {
         Ok(state_code) => {
             if state_code > 9 {
-                return Err(ResponseError {
+                return Err(ResponseErrorCustom {
                     message: "Invalid state code. Must be a number between 0 and 9.",
                 });
             }
             state_code
         }
         Err(_) => {
-            return Err(ResponseError {
+            return Err(ResponseErrorCustom {
                 message: "Invalid state code. Must be a number between 0 and 9.",
             })
         }
@@ -91,15 +96,21 @@ pub async fn new_cpf_state_code(
     Ok(web::Json({
         ValidCpfResponse {
             cpf: cpfs,
-            message: format!("Generated {} CPFs with state code {}", qtd, state_code_parsed),
+            message: format!(
+                "Generated {} CPFs with state code {}",
+                qtd, state_code_parsed
+            ),
             quantity: qtd,
         }
     }))
 }
 
-#[get("/validate-cpf/{cpf}")]
-pub async fn validate_cpf(cpf: web::Path<String>) -> impl Responder {
-    let cpf = cpf.to_string();
+#[get("/validate-cpf")]
+pub async fn validate_cpf(query: web::Query<ValidateCpf>) -> impl Responder {
+    let cpf = match &query.cpf {
+        Some(cpf) => cpf,
+        None => return web::Json(ValidateResponse { is_valid: false, error: Some("CPF not provided. Inform the cpf in the query params: '/validate-cpf?cpf=123456789012'".to_string()) }),
+    };
     let is_valid = lib::validate_cpf(&cpf);
     if let Err(error_message) = is_valid {
         web::Json(ValidateResponse {

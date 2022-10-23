@@ -10,10 +10,7 @@ async fn main() -> std::io::Result<()> {
     println!("API Version: {}", env!("CARGO_PKG_VERSION"));
     HttpServer::new(|| {
         App::new()
-            .route(
-                "/",
-                web::get().to(|| async { "CPF Generator" }),
-            )
+            .route("/", web::get().to(|| async { "CPF Generator and Validator API. For more information see https://github.com/OLoKo64/actix-cpf-generator-api" }))
             .service(paths::new_cpf)
             .service(paths::new_cpf_state_code)
             .service(paths::validate_cpf)
