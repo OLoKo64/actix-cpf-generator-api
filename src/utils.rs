@@ -1,13 +1,30 @@
+use crate::types::ResponseErrorCustom;
 use rand::Rng;
 use std::error::Error;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::types::Cpf;
 
+pub fn parse_state_code(state_code: &str) -> Result<u8, ResponseErrorCustom> {
+    match state_code.parse::<u8>() {
+        Ok(state_code) => {
+            if state_code > 9 {
+                return Err(ResponseErrorCustom {
+                    message: "Invalid state code. Must be a number between 0 and 9.",
+                });
+            }
+            Ok(state_code)
+        }
+        Err(_) => Err(ResponseErrorCustom {
+            message: "Invalid state code. Must be a number between 0 and 9.",
+        }),
+    }
+}
+
 pub fn validate_cpf(cpf: &str) -> Result<String, Box<dyn Error>> {
     let cpf = cpf.replace('.', "").replace('-', "");
     let cpf_len = cpf.graphemes(true).count();
-    if cpf_len < 11 || cpf_len > 11 {
+    if cpf_len != 11 {
         return Err(format!("Invalid CPF. Must have 11 digits. It has {}", cpf_len).into());
     }
     // This line guarantees that the vector will have 9 elements

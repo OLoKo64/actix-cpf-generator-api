@@ -18,9 +18,10 @@ pub struct ResponseErrorCustom {
 // Use default implementation for `error_response()` method
 impl error::ResponseError for ResponseErrorCustom {}
 
-#[derive(Deserialize)]
-pub struct QuantityCpf {
+#[derive(Deserialize, Debug)]
+pub struct GenCpfInfo {
     pub qtd: Option<String>,
+    pub state_code: Option<String>,
 }
 
 #[derive(Deserialize)]

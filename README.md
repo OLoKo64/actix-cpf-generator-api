@@ -11,6 +11,5 @@ cargo build --release
 ## Endpoints
 
 - `GET /gen-cpf` - Generates a valid CPF
-- `GET /gen-cpf/8` - Generates a valid CPF from SP
-- `GET /gen-cpf?qtd=10` - Generates 10 valid CPFs
+- `GET /gen-cpf?qtd=10&state_code=8` - Generates 10 valid CPFs with state code 8 (SP)
 - `GET /validate-cpf?cpf=123456789012` - Validates a CPF
