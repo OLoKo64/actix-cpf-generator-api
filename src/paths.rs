@@ -9,12 +9,17 @@ use crate::utils;
 pub async fn new_cpf(
     query_params: web::Query<GenCpfInfo>,
 ) -> Result<impl Responder, ResponseErrorCustom> {
-    let mut qtd = query_params
-        .qtd
-        .clone()
-        .unwrap_or_else(|| "1".to_string())
-        .parse::<u32>()
-        .unwrap_or(1);
+    let mut qtd = match query_params.qtd {
+        Some(ref qtd) => match qtd.parse::<u32>() {
+            Ok(qtd) => qtd,
+            Err(_) => {
+                return Err(ResponseErrorCustom {
+                    message: "Invalid \"qtd\". Must be a number between 1 and 1000.",
+                })
+            }
+        },
+        None => 1,
+    };
     let state_code: Option<u8> = match &query_params.state_code {
         Some(state_code) => match utils::parse_state_code(state_code) {
             Ok(state_code) => Some(state_code),
