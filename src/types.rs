@@ -31,7 +31,7 @@ pub struct ValidateCpf {
 
 #[derive(Debug, Serialize)]
 pub struct ValidCpfResponse {
-    pub cpf: Vec<Cpf>,
+    pub cpfs: Vec<Cpf>,
     pub message: String,
     pub quantity: u32,
 }

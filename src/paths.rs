@@ -40,7 +40,7 @@ pub async fn new_cpf(
         .for_each(|_| cpfs.push(utils::generate_cpf(state_code, None)));
     Ok(web::Json({
         ValidCpfResponse {
-            cpf: cpfs,
+            cpfs,
             message: format!("{} CPFs generated.", qtd),
             quantity: qtd,
         }
