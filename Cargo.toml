@@ -10,6 +10,7 @@ lto = "thin"
 # strip = true # Uncomment this line to strip debug symbols from the binary
 
 [dependencies]
+actix-cors = "0.6.3"
 actix-web = "4.2.1"
 derive_more = "0.99.17"
 rand = "0.8.5"
