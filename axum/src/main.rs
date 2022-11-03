@@ -21,6 +21,7 @@ async fn main() {
     let _guard = sentry::init((
         sentry_dns,
         sentry::ClientOptions {
+            traces_sample_rate: 0.0,
             release: sentry::release_name!(),
             ..Default::default()
         },
