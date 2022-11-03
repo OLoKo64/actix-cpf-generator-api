@@ -3,13 +3,28 @@ mod types;
 mod utils;
 
 use axum::{routing::get, Router};
+use dotenv::dotenv;
 use hyper::{header, Method};
+use std::env;
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 #[tokio::main]
 async fn main() {
+    // Load .env variables
+    dotenv().ok();
+    let sentry_dns = env::var("SENTRY_DNS").unwrap_or_else(|_| {
+        eprintln!("SENTRY_DNS not found in .env file.");
+        "".to_string()
+    });
+    let _guard = sentry::init((
+        sentry_dns,
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            ..Default::default()
+        },
+    ));
     // initialize tracing
     tracing_subscriber::fmt::init();
 
@@ -36,7 +51,16 @@ async fn main() {
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from((
+        [127, 0, 0, 1],
+        env::var("PORT")
+            .unwrap_or_else(|_| {
+                println!("PORT not found .env file, using default port: 3000");
+                "3000".to_string()
+            })
+            .parse::<u16>()
+            .expect("Failed to parse port from .env file"),
+    ));
     tracing::info!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())

@@ -12,6 +12,10 @@ pub async fn new_cpf(query_params: Query<GenCpfInfo>) -> (StatusCode, impl IntoR
         Some(ref qtd) => match qtd.parse::<u32>() {
             Ok(qtd) => qtd,
             Err(error) => {
+                sentry::capture_message(
+                    &format!("Invalid qtd parameter. Error: {}", &error),
+                    sentry::Level::Error,
+                );
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(CpfGenResponse {
@@ -20,7 +24,7 @@ pub async fn new_cpf(query_params: Query<GenCpfInfo>) -> (StatusCode, impl IntoR
                         quantity: None,
                         error: Some(error.to_string()),
                     }),
-                )
+                );
             }
         },
         None => 1,
@@ -29,6 +33,10 @@ pub async fn new_cpf(query_params: Query<GenCpfInfo>) -> (StatusCode, impl IntoR
         Some(state_code) => match utils::parse_state_code(state_code) {
             Ok(state_code) => Some(state_code),
             Err(error) => {
+                sentry::capture_message(
+                    &format!("Invalid state_code parameter. Error: {}", &error),
+                    sentry::Level::Error,
+                );
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(CpfGenResponse {
@@ -37,7 +45,7 @@ pub async fn new_cpf(query_params: Query<GenCpfInfo>) -> (StatusCode, impl IntoR
                         quantity: None,
                         error: Some(error),
                     }),
-                )
+                );
             }
         },
         None => None,
