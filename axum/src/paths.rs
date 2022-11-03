@@ -12,7 +12,6 @@ pub async fn new_cpf(query_params: Query<GenCpfInfo>) -> (StatusCode, impl IntoR
         Some(ref qtd) => match qtd.parse::<u32>() {
             Ok(qtd) => qtd,
             Err(error) => {
-                tracing::error!("Error parsing qtd: {}", error);
                 return (
                     StatusCode::BAD_REQUEST,
                     Json(CpfGenResponse {
