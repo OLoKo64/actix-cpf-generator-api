@@ -1,6 +1,6 @@
 # CPF Generator and Validator
 
-A simple CPF generator written in Rust using the [Actix framework](https://actix.rs/).
+A simple CPF generator written in Rust using both [Actix](https://actix.rs/) and [Axum](https://crates.io/crates/axum) frameworks.
 
 ## Build
 
