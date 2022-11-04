@@ -111,7 +111,7 @@ mod tests {
     #[test]
     fn test_generate_cpf_with_state_code() {
         let cpf = generate_cpf(Some(9), None);
-        assert_eq!(cpf.cpf.graphemes(true).nth(8).unwrap(), "9",);
+        assert_eq!(cpf.cpf.graphemes(true).nth(8).unwrap(), "9");
     }
 
     #[test]
