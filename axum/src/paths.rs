@@ -7,7 +7,7 @@ use axum::{
 };
 
 // Extractors documentation: https://docs.rs/axum/latest/axum/#extractors
-pub async fn new_cpf(query_params: Query<GenCpfInfo>) -> (StatusCode, impl IntoResponse) {
+pub async fn new_cpf(Query(query_params): Query<GenCpfInfo>) -> (StatusCode, impl IntoResponse) {
     let mut qtd = match query_params.qtd {
         Some(ref qtd) => match qtd.parse::<u32>() {
             Ok(qtd) => qtd,
@@ -68,7 +68,7 @@ pub async fn new_cpf(query_params: Query<GenCpfInfo>) -> (StatusCode, impl IntoR
     )
 }
 
-pub async fn validate_cpf(query: Query<ValidateCpf>) -> impl IntoResponse {
+pub async fn validate_cpf(Query(query): Query<ValidateCpf>) -> impl IntoResponse {
     let cpf = match &query.cpf {
         Some(cpf) => cpf,
         None => return Json(ValidateResponse { is_valid: false, error: Some("CPF not provided. Inform the cpf in the query params: '/validate-cpf?cpf=123456789012'".to_string()) }),
