@@ -26,12 +26,21 @@ pub fn validate_cpf(cpf: &str) -> Result<String, Box<dyn Error>> {
     let binding = cpf.graphemes(true).collect::<Vec<_>>()[..9].to_vec();
     let clear_cpf = binding.iter().map(|x| x.to_string().parse::<u8>());
     let mut cpf_seed = Vec::new();
-    for x in clear_cpf {
-        tracing::debug!("x: {:?}", x);
-        cpf_seed.push(x?);
+    for i in clear_cpf {
+        match i {
+            Ok(i) => cpf_seed.push(i),
+            Err(_) => return Err("Invalid number found in CPF.".into()),
+        }
     }
     // With that this unwrap is guaranteed to be valid
-    let generated_cpf = generate_cpf(None, Some(cpf_seed.try_into().unwrap()));
+    let generated_cpf = generate_cpf(
+        None,
+        Some(
+            cpf_seed
+                .try_into()
+                .expect("cpf_seed does not have the correct length"),
+        ),
+    );
     if generated_cpf.cpf == cpf {
         return Ok("Valid CPF.".to_string());
     }
