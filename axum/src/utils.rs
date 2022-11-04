@@ -17,14 +17,14 @@ pub fn parse_state_code(state_code: &str) -> Result<u8, String> {
 }
 
 pub fn validate_cpf(cpf: &str) -> Result<String, Box<dyn Error>> {
-    let cpf = cpf.replace('.', "").replace('-', "");
+    let cpf = cpf.replace(['.', '-'], "");
     let cpf_len = cpf.graphemes(true).count();
     if cpf_len != 11 {
         return Err(format!("Invalid CPF. Must have 11 digits. It has {}", cpf_len).into());
     }
     // This line guarantees that the vector will have 9 elements
     let binding = cpf.graphemes(true).collect::<Vec<_>>()[..9].to_vec();
-    let clear_cpf = binding.iter().map(|x| x.to_string().parse::<u8>());
+    let clear_cpf = binding.into_iter().map(|x| x.to_string().parse::<u8>());
     let mut cpf_seed = Vec::new();
     for i in clear_cpf {
         match i {
@@ -55,7 +55,7 @@ pub fn generate_cpf(state_code: Option<u8>, validate_seed: Option<[u8; 9]>) -> C
     let str_cpf = cpf
         .iter()
         .map(|number| number.to_string())
-        .collect::<Vec<String>>()
+        .collect::<Vec<_>>()
         .join("");
     let formatted_cpf = format!(
         "{}.{}.{}-{}",
@@ -70,7 +70,7 @@ pub fn generate_cpf(state_code: Option<u8>, validate_seed: Option<[u8; 9]>) -> C
         cpf_state: cpf_state(&str_cpf)
             .iter()
             .map(|&state| state.to_string())
-            .collect::<Vec<String>>(),
+            .collect::<Vec<_>>(),
     }
 }
 
@@ -87,7 +87,7 @@ fn cpf_state(cpf: &str) -> Vec<&str> {
         "7" => vec!["ES", "RJ"],
         "8" => vec!["SP"],
         "9" => vec!["PR", "SC"],
-        _ => panic!("Invalid state code"),
+        _ => panic!("Invalid state code."),
     }
 }
 

@@ -100,7 +100,9 @@ impl CpfUtils {
         let verifier_number = if n2 < 2 {
             0
         } else {
-            (11 - n2).try_into().unwrap()
+            (11 - n2)
+                .try_into()
+                .expect("verifier_number could not be parsed to u8")
         };
         match self.cpf_seed_with_first_verifier {
             Some(_) => self.second_verifier_number = Some(verifier_number),
