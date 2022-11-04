@@ -1,8 +1,8 @@
-use rand::Rng;
 use std::error::Error;
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::types::Cpf;
+use crate::structs::Cpf;
+use crate::structs::CpfUtils;
 
 pub fn parse_state_code(state_code: &str) -> Result<u8, String> {
     match state_code.parse::<u8>() {
@@ -39,89 +39,88 @@ pub fn validate_cpf(cpf: &str) -> Result<String, Box<dyn Error>> {
 }
 
 pub fn generate_cpf(state_code: Option<u8>, validate_seed: Option<[u8; 9]>) -> Cpf {
-    let cpf_seed = match validate_seed {
-        Some(seed) => seed,
-        None => match state_code {
-            Some(state_code) => {
-                let mut seed = random_seed();
-                seed[8] = state_code;
-                seed
-            }
-            None => random_seed(),
-        },
-    };
-    let sum_elements = cpf_seed
+    let mut cpf_seed = CpfUtils::new(validate_seed, state_code);
+    cpf_seed.set_verifier_numbers();
+    let mut cpf = cpf_seed.seed.into_iter().collect::<Vec<_>>();
+    cpf.extend(cpf_seed.get_verifier_numbers());
+    let str_cpf = cpf
         .iter()
-        .enumerate()
-        .map(|(index, &number)| number as u32 * (10 - index as u32))
-        .sum::<u32>();
-    let first_verifier_num = verifier_num(sum_elements);
-    let mut cpf_seed_with_first_verifier: Vec<u8> = cpf_seed
-        .into_iter()
-        .chain(vec![first_verifier_num])
-        .collect::<Vec<u8>>();
-    cpf_seed_with_first_verifier.remove(0);
-    let sum_elements_with_first_verifier = cpf_seed_with_first_verifier
-        .iter()
-        .enumerate()
-        .map(|(index, &number)| number as u32 * (10 - index as u32))
-        .sum::<u32>();
-    let second_verifier_num = verifier_num(sum_elements_with_first_verifier);
-    let cpf = cpf_seed
-        .into_iter()
-        .chain(vec![first_verifier_num, second_verifier_num])
-        .collect::<Vec<u8>>()
-        .iter()
-        .map(|&number| number.to_string())
+        .map(|number| number.to_string())
         .collect::<Vec<String>>()
         .join("");
     let formatted_cpf = format!(
         "{}.{}.{}-{}",
-        cpf[0..3].to_string(),
-        cpf[3..6].to_string(),
-        cpf[6..9].to_string(),
-        cpf[9..11].to_string()
+        &str_cpf[0..3],
+        &str_cpf[3..6],
+        &str_cpf[6..9],
+        &str_cpf[9..11]
     );
     Cpf {
-        cpf: cpf.to_string(),
+        cpf: str_cpf.to_string(),
         cpf_formatted: formatted_cpf,
-        cpf_state: cpf_state(&cpf)
+        cpf_state: cpf_state(&str_cpf)
             .iter()
             .map(|&state| state.to_string())
             .collect::<Vec<String>>(),
     }
 }
 
-fn verifier_num(n1: u32) -> u8 {
-    let n2 = n1 % 11;
-    if n2 < 2 {
-        0
-    } else {
-        (11 - n2).try_into().unwrap()
-    }
-}
-
-fn random_seed() -> [u8; 9] {
-    let mut seed = [0; 9];
-    for i in &mut seed {
-        *i = rand::thread_rng().gen_range(0..10);
-    }
-    seed
-}
-
 fn cpf_state(cpf: &str) -> Vec<&str> {
-    let state_code: char = cpf.chars().nth(8).unwrap();
+    let state_code = cpf.graphemes(true).nth(8).unwrap();
     match state_code {
-        '0' => vec!["RS"],
-        '1' => vec!["DF", "GO", "MT", "MS", "TO"],
-        '2' => vec!["AC", "AM", "AP", "PA", "RO", "RR"],
-        '3' => vec!["CE", "MA", "PI"],
-        '4' => vec!["AL", "PB", "PE", "RN"],
-        '5' => vec!["BA", "SE"],
-        '6' => vec!["MG"],
-        '7' => vec!["ES", "RJ"],
-        '8' => vec!["SP"],
-        '9' => vec!["PR", "SC"],
+        "0" => vec!["RS"],
+        "1" => vec!["DF", "GO", "MT", "MS", "TO"],
+        "2" => vec!["AC", "AM", "AP", "PA", "RO", "RR"],
+        "3" => vec!["CE", "MA", "PI"],
+        "4" => vec!["AL", "PB", "PE", "RN"],
+        "5" => vec!["BA", "SE"],
+        "6" => vec!["MG"],
+        "7" => vec!["ES", "RJ"],
+        "8" => vec!["SP"],
+        "9" => vec!["PR", "SC"],
         _ => panic!("Invalid state code"),
+    }
+}
+
+#[cfg(test)]
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_cpf_with_starting_seed() {
+        assert_eq!(
+            generate_cpf(None, Some([2, 8, 0, 0, 1, 2, 3, 8, 9])),
+            Cpf {
+                cpf: "28001238938".to_string(),
+                cpf_formatted: "280.012.389-38".to_string(),
+                cpf_state: vec!["PR".to_string(), "SC".to_string()],
+            }
+        );
+    }
+
+    #[test]
+    fn test_generate_cpf_with_state_code() {
+        let cpf = generate_cpf(Some(9), None);
+        assert_eq!(cpf.cpf.graphemes(true).nth(8).unwrap(), "9",);
+    }
+
+    #[test]
+    fn test_validate_generated_cpf() {
+        let cpf = generate_cpf(None, None);
+        let result = validate_cpf(&cpf.cpf);
+        assert_eq!(result.ok(), Some("Valid CPF.".to_string()));
+    }
+
+    #[test]
+    fn test_validate_cpf() {
+        let result = validate_cpf("280.012.389-38");
+        assert_eq!(result.ok(), Some("Valid CPF.".to_string()));
+    }
+
+    #[test]
+    fn test_validate_cpf_invalid() {
+        let result = validate_cpf("280.012.389-33");
+        assert_eq!(result.ok(), None);
     }
 }

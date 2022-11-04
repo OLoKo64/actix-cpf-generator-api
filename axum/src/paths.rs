@@ -1,4 +1,4 @@
-use crate::types::{CpfGenResponse, GenCpfInfo, ValidateCpf, ValidateResponse};
+use crate::structs::{CpfGenResponse, GenCpfInfo, ValidateCpf, ValidateResponse};
 use crate::utils;
 use axum::{
     extract::{Json, Query},

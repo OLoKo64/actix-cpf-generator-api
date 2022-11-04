@@ -1,5 +1,5 @@
 mod paths;
-mod types;
+mod structs;
 mod utils;
 
 use axum::{routing::get, Router};
