@@ -1,3 +1,4 @@
+use crate::htmls::INDEX_HTML;
 use crate::structs::{CpfGenResponse, GenCpfInfo, ValidateCpf, ValidateResponse};
 use crate::utils;
 use axum::{
@@ -5,6 +6,10 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
+
+pub async fn index_page() -> impl IntoResponse {
+    INDEX_HTML
+}
 
 // Extractors documentation: https://docs.rs/axum/latest/axum/#extractors
 pub async fn new_cpf(Query(query_params): Query<GenCpfInfo>) -> (StatusCode, impl IntoResponse) {
