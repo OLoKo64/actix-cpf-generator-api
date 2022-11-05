@@ -53,7 +53,7 @@ async fn main() {
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
     let addr = SocketAddr::from((
-        [127, 0, 0, 1],
+        [0, 0, 0, 0],
         env::var("PORT")
             .unwrap_or_else(|_| {
                 println!("PORT not found .env file, using default port: 3000");
