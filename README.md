@@ -13,3 +13,18 @@ cargo build --release
 - `GET /gen-cpf` - Generates a valid CPF
 - `GET /gen-cpf?qtd=10&state_code=8` - Generates 10 valid CPFs with state code 8 (SP)
 - `GET /validate-cpf?cpf=123456789012` - Validates a CPF
+
+## Dependencies
+
+> ```libssl-1.1```
+
+Ubuntu:
+
+```bash
+sudo apt install libssl-dev
+```
+Arch:
+
+```bash
+sudo pacman -S openssl-1.1
+```
