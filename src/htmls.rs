@@ -53,6 +53,12 @@ pub const INDEX_HTML: Html<&str> = Html(
         $.get("https://api.github.com/repos/OLoKo64/rust-cpf-generator-api/actions/workflows/39695392/runs", (data, status) => {{
             if (status == "success") {{
                 const latestWorkflowConclusion = data.workflow_runs[0].conclusion;
+                if (!latestWorkflowConclusion) {
+                    const latestWorkflowStatus = data.workflow_runs[0].status;
+                    $("#api-status").text(latestWorkflowStatus.charAt(0).toUpperCase() + latestWorkflowStatus.slice(1));
+                    $("#api-status").css("color", "orange");
+                    return;
+                }
                 const latestWorkflowStatusColor = latestWorkflowConclusion === "success" ? "green" : "red";
 
                 $("#api-status").text(latestWorkflowConclusion.charAt(0).toUpperCase() + latestWorkflowConclusion.slice(1));
