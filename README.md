@@ -1,5 +1,7 @@
 # CPF Generator and Validator
 
+[![Rust API Workflow](https://github.com/OLoKo64/rust-cpf-generator-api/actions/workflows/rust-workflow.yml/badge.svg?branch=main)](https://github.com/OLoKo64/rust-cpf-generator-api/actions/workflows/rust-workflow.yml)
+
 A simple CPF generator written in Rust using the [Axum](https://crates.io/crates/axum) framework.
 
 ## Build
