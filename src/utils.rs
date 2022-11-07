@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::num::ParseIntError;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::structs::Cpf;
@@ -24,14 +25,10 @@ pub fn validate_cpf(cpf: &str) -> Result<String, Box<dyn Error>> {
     }
     // This line guarantees that the vector will have 9 elements
     let binding = cpf.graphemes(true).collect::<Vec<_>>()[..9].to_vec();
-    let clear_cpf = binding.into_iter().map(|x| x.to_string().parse::<u8>());
-    let mut cpf_seed = Vec::new();
-    for i in clear_cpf {
-        match i {
-            Ok(i) => cpf_seed.push(i),
-            Err(_) => return Err("Invalid number found in CPF.".into()),
-        }
-    }
+    let cpf_seed: Result<Vec<_>, ParseIntError> = binding.into_iter().map(|x| x.to_string().parse::<u8>()).collect();
+    let Ok(cpf_seed) = cpf_seed else {
+        return Err("Invalid character in CPF. Must have 11 digits.".into());
+    };
     // With that this unwrap is guaranteed to be valid
     let generated_cpf = generate_cpf(
         None,
