@@ -6,6 +6,7 @@ mod htmls;
 use axum::{routing::get, Router};
 use dotenv::dotenv;
 use hyper::{header, Method};
+use tracing::log::warn;
 use std::env;
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
@@ -16,7 +17,7 @@ async fn main() {
     // Load .env variables
     dotenv().ok();
     let sentry_dns = env::var("SENTRY_DNS").unwrap_or_else(|_| {
-        eprintln!("SENTRY_DNS not found in .env file.");
+        warn!("SENTRY_DNS not found in .env file.");
         "".to_string()
     });
     let _guard = sentry::init((
@@ -58,7 +59,7 @@ async fn main() {
         [0, 0, 0, 0],
         env::var("PORT")
             .unwrap_or_else(|_| {
-                println!("PORT not found .env file, using default port: 3000");
+                warn!("PORT not found .env file, using default port: 3000");
                 "3000".to_string()
             })
             .parse::<u16>()

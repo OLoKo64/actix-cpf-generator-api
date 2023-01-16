@@ -1,17 +1,21 @@
-FROM rust:1.65.0 as builder
+# Use the official Rust image to create a build.
+FROM rust as builder
 
-WORKDIR /api
+# Copy local code to the container image.
+COPY . /app
 
-COPY ./Cargo.toml ./Cargo.toml
-COPY ./Cargo.lock ./Cargo.lock
-COPY ./src ./src
+# Set the working directory.
+WORKDIR /app
+
+# Build the release with cargo build, including optimizations.
 RUN cargo build --release
-RUN mv ./target/release/cpf-generator-api .
 
-FROM debian:buster-slim
-WORKDIR /api
-RUN apt update
-RUN apt install -y libssl-dev
-COPY --from=builder /api/cpf-generator-api /api/cpf-generator-api
+# Use the official Debian slim image for a lean production container.
+FROM gcr.io/distroless/cc-debian11
 
-CMD cd /api && ./cpf-generator-api
+# Copy the binary to the production image from the builder stage.
+COPY --from=builder /app/target/release/cpf-generator-api /app/cpf-generator-api
+WORKDIR /app
+
+# Run the web service on container startup.
+CMD ["./cpf-generator-api"]
