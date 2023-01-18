@@ -1,9 +1,52 @@
 use std::error::Error;
 use std::num::ParseIntError;
+use axum::Json;
+use hyper::StatusCode;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::structs::Cpf;
+use crate::structs::CpfGenResponse;
 use crate::structs::CpfUtils;
+
+pub fn quantity_to_u32(quantity: Option<String>) -> Result<u32, (StatusCode, Json<CpfGenResponse>)> {
+    match quantity {
+        Some(ref qtd) => match qtd.parse::<u32>() {
+            Ok(qtd) => Ok(qtd),
+            Err(error) => Err((
+                StatusCode::BAD_REQUEST,
+                Json(CpfGenResponse {
+                    cpfs: None,
+                    message: "Invalid state_code parameter.".to_string(),
+                    quantity: None,
+                    error: Some(error.to_string()),
+                }),
+            )),
+        },
+        None => Ok(1),
+    }
+}
+
+pub fn get_state_code(
+    state_code: Option<String>,
+) -> Result<Option<u8>, (StatusCode, Json<CpfGenResponse>)> {
+    match &state_code {
+        Some(code) => match parse_state_code(code) {
+            Ok(code) => Ok(Some(code)),
+            Err(_error) => {
+                return Err((
+                    StatusCode::BAD_REQUEST,
+                    Json(CpfGenResponse {
+                        cpfs: None,
+                        message: "Invalid state_code parameter.".to_string(),
+                        quantity: None,
+                        error: Some("Invalid state_code parameter.".to_string()),
+                    }),
+                ));
+            }
+        },
+        None => Ok(None),
+    }
+}
 
 pub fn parse_state_code(state_code: &str) -> Result<u8, String> {
     match state_code.parse::<u8>() {

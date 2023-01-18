@@ -1,6 +1,6 @@
 use crate::htmls::INDEX_HTML;
 use crate::structs::{CpfGenResponse, GenCpfInfo, ValidateCpf, ValidateResponse};
-use crate::utils;
+use crate::utils::{self, quantity_to_u32, get_state_code};
 use axum::{
     extract::{Json, Query},
     http::StatusCode,
@@ -11,50 +11,14 @@ pub async fn index_page() -> impl IntoResponse {
     INDEX_HTML
 }
 
+
+
 // Extractors documentation: https://docs.rs/axum/latest/axum/#extractors
-pub async fn new_cpf(Query(query_params): Query<GenCpfInfo>) -> (StatusCode, impl IntoResponse) {
-    let mut qtd = match query_params.qtd {
-        Some(ref qtd) => match qtd.parse::<u32>() {
-            Ok(qtd) => qtd,
-            Err(error) => {
-                sentry::capture_message(
-                    &format!("Invalid qtd parameter. Error: {}", &error),
-                    sentry::Level::Error,
-                );
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(CpfGenResponse {
-                        cpfs: None,
-                        message: "Invalid qtd parameter.".to_string(),
-                        quantity: None,
-                        error: Some(error.to_string()),
-                    }),
-                );
-            }
-        },
-        None => 1,
-    };
-    let state_code: Option<u8> = match &query_params.state_code {
-        Some(state_code) => match utils::parse_state_code(state_code) {
-            Ok(state_code) => Some(state_code),
-            Err(error) => {
-                sentry::capture_message(
-                    &format!("Invalid state_code parameter. Error: {}", &error),
-                    sentry::Level::Error,
-                );
-                return (
-                    StatusCode::BAD_REQUEST,
-                    Json(CpfGenResponse {
-                        cpfs: None,
-                        message: "Invalid state_code parameter.".to_string(),
-                        quantity: None,
-                        error: Some(error),
-                    }),
-                );
-            }
-        },
-        None => None,
-    };
+pub async fn new_cpf(
+    Query(query_params): Query<GenCpfInfo>,
+) -> Result<impl IntoResponse, (StatusCode, Json<CpfGenResponse>)> {
+    let mut qtd = quantity_to_u32(query_params.qtd)?;
+    let state_code: Option<u8> = get_state_code(query_params.state_code)?;
     if qtd > 1000 {
         qtd = 1000
     }
@@ -62,7 +26,7 @@ pub async fn new_cpf(Query(query_params): Query<GenCpfInfo>) -> (StatusCode, imp
     (0..qtd)
         .into_iter()
         .for_each(|_| cpfs.push(utils::generate_cpf(state_code, None)));
-    (
+    Ok((
         StatusCode::OK,
         Json(CpfGenResponse {
             cpfs: Some(cpfs),
@@ -70,7 +34,7 @@ pub async fn new_cpf(Query(query_params): Query<GenCpfInfo>) -> (StatusCode, imp
             quantity: Some(qtd),
             error: None,
         }),
-    )
+    ))
 }
 
 pub async fn validate_cpf(Query(query): Query<ValidateCpf>) -> impl IntoResponse {

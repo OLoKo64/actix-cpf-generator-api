@@ -6,6 +6,7 @@ mod htmls;
 use axum::{routing::get, Router};
 use dotenv::dotenv;
 use hyper::{header, Method};
+use sentry_tower::NewSentryLayer;
 use tracing::log::warn;
 use std::env;
 use std::net::SocketAddr;
@@ -44,6 +45,7 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         // .route("/", get(|| async { "CPF Generator and Validator API. For more information see https://github.com/OLoKo64/rust-cpf-generator-api" }))
+        .layer(NewSentryLayer::new_from_top())
         .route("/", get(paths::index_page))
         .route("/validate-cpf", get(paths::validate_cpf))
         .route("/gen-cpf", get(paths::new_cpf))
