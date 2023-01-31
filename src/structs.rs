@@ -93,7 +93,7 @@ impl CpfUtils {
         let sum_elements: u32 = seed
             .iter()
             .enumerate()
-            .map(|(index, &number)| number as u32 * (10 - index as u32))
+            .map(|(index, &number)| u32::from(number) * (10 - index as u32))
             .sum::<u32>();
 
         let n2 = sum_elements % 11;
@@ -104,13 +104,12 @@ impl CpfUtils {
                 .try_into()
                 .expect("verifier_number could not be parsed to u8")
         };
-        match self.cpf_seed_with_first_verifier {
-            Some(_) => self.second_verifier_number = Some(verifier_number),
-            None => {
-                self.first_verifier_number = Some(verifier_number);
-                self.cpf_seed_with_first_verifier = Some(self.set_cpf_seed_with_first_verifier());
-                self.set_verifier_numbers();
-            }
+        if self.cpf_seed_with_first_verifier.is_some() {
+            self.second_verifier_number = Some(verifier_number);
+        } else {
+            self.first_verifier_number = Some(verifier_number);
+            self.cpf_seed_with_first_verifier = Some(self.set_cpf_seed_with_first_verifier());
+            self.set_verifier_numbers();
         }
     }
 
@@ -128,7 +127,7 @@ impl CpfUtils {
 
     fn random_seed() -> [u8; 9] {
         let mut seed = [0; 9];
-        for i in &mut seed {
+        for i in seed.iter_mut() {
             *i = rand::thread_rng().gen_range(0..10);
         }
         seed

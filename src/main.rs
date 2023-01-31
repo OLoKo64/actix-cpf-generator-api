@@ -1,17 +1,17 @@
+mod htmls;
 mod paths;
 mod structs;
 mod utils;
-mod htmls;
 
 use axum::{routing::get, Router};
 use dotenv::dotenv;
 use hyper::{header, Method};
 use sentry_tower::NewSentryLayer;
-use tracing::log::warn;
 use std::env;
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
+use tracing::log::warn;
 
 #[tokio::main]
 async fn main() {
@@ -19,12 +19,11 @@ async fn main() {
     dotenv().ok();
     let sentry_dns = env::var("SENTRY_DNS").unwrap_or_else(|_| {
         warn!("SENTRY_DNS not found in .env file.");
-        "".to_string()
+        String::new()
     });
     let _guard = sentry::init((
         sentry_dns,
         sentry::ClientOptions {
-            traces_sample_rate: 0.0,
             release: sentry::release_name!(),
             ..Default::default()
         },
@@ -67,7 +66,7 @@ async fn main() {
             .parse::<u16>()
             .expect("Failed to parse port from .env file"),
     ));
-    tracing::info!("listening on {}", addr);
+    tracing::info!("listening on {addr}");
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
