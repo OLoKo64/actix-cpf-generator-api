@@ -1,6 +1,5 @@
 use axum::Json;
 use hyper::StatusCode;
-use std::error::Error;
 use std::num::ParseIntError;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -60,7 +59,7 @@ pub fn parse_state_code(state_code: &str) -> Result<u8, String> {
     }
 }
 
-pub fn validate_cpf(cpf: &str) -> Result<String, Box<dyn Error>> {
+pub fn validate_cpf(cpf: &str) -> Result<String, String> {
     let cpf = cpf.replace(['.', '-'], "");
     let cpf_len = cpf.graphemes(true).count();
     if cpf_len != 11 {
