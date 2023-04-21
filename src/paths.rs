@@ -21,9 +21,7 @@ pub async fn new_cpf(
         qtd = 1000;
     }
     let mut cpfs = Vec::new();
-    (0..qtd)
-        .into_iter()
-        .for_each(|_| cpfs.push(utils::generate_cpf(state_code, None)));
+    (0..qtd).for_each(|_| cpfs.push(utils::generate_cpf(state_code, None)));
     Ok((
         StatusCode::OK,
         Json(CpfGenResponse {
