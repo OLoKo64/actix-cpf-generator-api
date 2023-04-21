@@ -90,11 +90,11 @@ impl CpfUtils {
             Some(seed) => seed,
             None => self.seed,
         };
-        let sum_elements: u32 = seed
+        let sum_elements: u64 = seed
             .iter()
             .enumerate()
-            .map(|(index, &number)| number as u32 * (10 - index as u32))
-            .sum::<u32>();
+            .map(|(index, &number)| u64::from(number) * (10 - index as u64))
+            .sum::<u64>();
 
         let n2 = sum_elements % 11;
         let verifier_number = if n2 < 2 {
@@ -104,13 +104,12 @@ impl CpfUtils {
                 .try_into()
                 .expect("verifier_number could not be parsed to u8")
         };
-        match self.cpf_seed_with_first_verifier {
-            Some(_) => self.second_verifier_number = Some(verifier_number),
-            None => {
-                self.first_verifier_number = Some(verifier_number);
-                self.cpf_seed_with_first_verifier = Some(self.set_cpf_seed_with_first_verifier());
-                self.set_verifier_numbers();
-            }
+        if self.cpf_seed_with_first_verifier.is_some() {
+            self.second_verifier_number = Some(verifier_number);
+        } else {
+            self.first_verifier_number = Some(verifier_number);
+            self.cpf_seed_with_first_verifier = Some(self.set_cpf_seed_with_first_verifier());
+            self.set_verifier_numbers();
         }
     }
 

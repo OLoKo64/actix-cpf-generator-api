@@ -1,26 +1,26 @@
 [package]
 name = "cpf-generator-api"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
-rust-version = "1.65"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [profile.release]
 codegen-units = 1
-lto = "thin"
+lto = true
 strip = true
 
 [dependencies]
-axum = "0.6.2"
+axum = "0.6.16"
 dotenv = "0.15.0"
-hyper = { version = "0.14.23", features = ["full"] }
+hyper = { version = "0.14.26", features = ["full"] }
 rand = "0.8.5"
-sentry = "0.29.1"
-serde = { version = "1.0.152", features = ["derive"] }
-tokio = { version = "1.24.1", features = ["macros", "rt-multi-thread"] }
+sentry = "0.31.0"
+sentry-tower = "0.31.0"
+serde = { version = "1.0.160", features = ["derive"] }
+tokio = { version = "1.27.0", features = ["macros", "rt-multi-thread"] }
 tower = "0.4.13"
-tower-http = { version = "0.3.5", features = ["trace", "cors"] }
+tower-http = { version = "0.4.0", features = ["trace", "cors"] }
 tracing = "0.1.37"
 tracing-subscriber = "0.3.16"
-unicode-segmentation = "1.10.0"
+unicode-segmentation = "1.10.1"

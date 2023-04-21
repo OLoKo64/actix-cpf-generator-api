@@ -47,7 +47,7 @@ pub const INDEX_HTML: Html<&str> = Html(
         background-color: #dddddd;
     }
 </style>
-<script src="https://code.jquery.com/jquery-3.6.1.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
     $(document).ready(() => {{
         $.get("https://api.github.com/repos/OLoKo64/rust-cpf-generator-api/actions/workflows/39695392/runs", (data, status) => {{

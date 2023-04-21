@@ -1,16 +1,17 @@
+mod htmls;
 mod paths;
 mod structs;
 mod utils;
-mod htmls;
 
 use axum::{routing::get, Router};
 use dotenv::dotenv;
 use hyper::{header, Method};
-use tracing::log::warn;
+use sentry_tower::NewSentryLayer;
 use std::env;
 use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
+use tracing::log::warn;
 
 #[tokio::main]
 async fn main() {
@@ -18,12 +19,11 @@ async fn main() {
     dotenv().ok();
     let sentry_dns = env::var("SENTRY_DNS").unwrap_or_else(|_| {
         warn!("SENTRY_DNS not found in .env file.");
-        "".to_string()
+        String::new()
     });
     let _guard = sentry::init((
         sentry_dns,
         sentry::ClientOptions {
-            traces_sample_rate: 0.0,
             release: sentry::release_name!(),
             ..Default::default()
         },
@@ -44,6 +44,7 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         // .route("/", get(|| async { "CPF Generator and Validator API. For more information see https://github.com/OLoKo64/rust-cpf-generator-api" }))
+        .layer(NewSentryLayer::new_from_top())
         .route("/", get(paths::index_page))
         .route("/validate-cpf", get(paths::validate_cpf))
         .route("/gen-cpf", get(paths::new_cpf))
@@ -65,7 +66,7 @@ async fn main() {
             .parse::<u16>()
             .expect("Failed to parse port from .env file"),
     ));
-    tracing::info!("listening on {}", addr);
+    tracing::info!("listening on {addr}");
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

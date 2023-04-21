@@ -1,9 +1,51 @@
-use std::error::Error;
+use axum::Json;
+use hyper::StatusCode;
 use std::num::ParseIntError;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::structs::Cpf;
+use crate::structs::CpfGenResponse;
 use crate::structs::CpfUtils;
+
+pub fn quantity_to_u32(
+    quantity: &Option<String>,
+) -> Result<u32, (StatusCode, Json<CpfGenResponse>)> {
+    match quantity {
+        Some(ref qtd) => match qtd.parse::<u32>() {
+            Ok(qtd) => Ok(qtd),
+            Err(error) => Err((
+                StatusCode::BAD_REQUEST,
+                Json(CpfGenResponse {
+                    cpfs: None,
+                    message: "Invalid state_code parameter.".to_string(),
+                    quantity: None,
+                    error: Some(error.to_string()),
+                }),
+            )),
+        },
+        None => Ok(1),
+    }
+}
+
+pub fn get_state_code(
+    state_code: &Option<String>,
+) -> Result<Option<u8>, (StatusCode, Json<CpfGenResponse>)> {
+    match &state_code {
+        Some(code) => match parse_state_code(code) {
+            Ok(code) => Ok(Some(code)),
+            Err(_error) => Err((
+                StatusCode::BAD_REQUEST,
+                Json(CpfGenResponse {
+                    cpfs: None,
+                    message: "Invalid state_code parameter.".to_string(),
+                    quantity: None,
+                    error: Some("Invalid state_code parameter.".to_string()),
+                }),
+            )),
+        },
+        None => Ok(None),
+    }
+}
 
 pub fn parse_state_code(state_code: &str) -> Result<u8, String> {
     match state_code.parse::<u8>() {
@@ -17,15 +59,18 @@ pub fn parse_state_code(state_code: &str) -> Result<u8, String> {
     }
 }
 
-pub fn validate_cpf(cpf: &str) -> Result<String, Box<dyn Error>> {
+pub fn validate_cpf(cpf: &str) -> Result<String, String> {
     let cpf = cpf.replace(['.', '-'], "");
     let cpf_len = cpf.graphemes(true).count();
     if cpf_len != 11 {
-        return Err(format!("Invalid CPF. Must have 11 digits. It has {}", cpf_len).into());
+        return Err(format!("Invalid CPF. Must have 11 digits. It has {cpf_len}").into());
     }
     // This line guarantees that the vector will have 9 elements
     let binding = cpf.graphemes(true).collect::<Vec<_>>()[..9].to_vec();
-    let cpf_seed: Result<Vec<_>, ParseIntError> = binding.into_iter().map(|x| x.to_string().parse::<u8>()).collect();
+    let cpf_seed: Result<Vec<_>, ParseIntError> = binding
+        .into_iter()
+        .map(|x| x.to_string().parse::<u8>())
+        .collect();
     let Ok(cpf_seed) = cpf_seed else {
         return Err("Invalid character in CPF. Must have 11 digits.".into());
     };
@@ -49,11 +94,7 @@ pub fn generate_cpf(state_code: Option<u8>, validate_seed: Option<[u8; 9]>) -> C
     cpf_seed.set_verifier_numbers();
     let mut cpf = cpf_seed.seed.into_iter().collect::<Vec<_>>();
     cpf.extend(cpf_seed.get_verifier_numbers());
-    let str_cpf = cpf
-        .iter()
-        .map(|number| number.to_string())
-        .collect::<Vec<_>>()
-        .join("");
+    let str_cpf = cpf.iter().map(ToString::to_string).collect::<String>();
     let formatted_cpf = format!(
         "{}.{}.{}-{}",
         &str_cpf[0..3],
